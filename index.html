@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grade to Percentage Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --border: #e4e4e4;
+    --border-strong: #d0d0d0;
+    --accent: #0f6e63;
+    --accent-hover: #0b5951;
+    --accent-tint: #eaf4f2;
+    --fail: #9a2f2f;
+    --fail-tint: #fbeceb;
+    --row-head: #fafafa;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 6px rgba(0,0,0,0.03);
+  }
+  :root[data-theme="dark"] {
+    --bg: #121212;
+    --surface: #1a1a1a;
+    --text: #f2f2f2;
+    --text-muted: #a3a3a3;
+    --border: #2e2e2e;
+    --border-strong: #3d3d3d;
+    --accent: #35b3a0;
+    --accent-hover: #48c3b0;
+    --accent-tint: #163330;
+    --fail: #e28d8d;
+    --fail-tint: #3a2020;
+    --row-head: #1e1e1e;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  html { box-sizing: border-box; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *:before, *:after { box-sizing: inherit; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  header.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+  h1 { font-size: 25px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--text-muted); font-size: 15px; margin: 0; line-height: 1.5; max-width: 52ch; }
+  .theme-toggle {
+    flex-shrink: 0; font-family: inherit; font-size: 13px; font-weight: 500;
+    padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 8px;
+    background: var(--surface); color: var(--text); cursor: pointer;
+  }
+
+  nav.mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  nav.mode-tabs button {
+    font-family: inherit; font-size: 14px; font-weight: 500; padding: 10px 4px; margin-right: 16px;
+    border: none; border-bottom: 2px solid transparent; background: none; color: var(--text-muted); cursor: pointer;
+  }
+  nav.mode-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .toggle { display: flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; margin-bottom: 20px; width: fit-content; }
+  .toggle button { font-family: inherit; font-size: 14px; font-weight: 500; padding: 10px 18px; border: none; background: var(--surface); color: var(--text); cursor: pointer; }
+  .toggle button + button { border-left: 1px solid var(--border-strong); }
+  .toggle button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  .card { border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 26px; background: var(--surface); margin-bottom: 24px; }
+  .field-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
+  .num-input, select.grade-select {
+    width: 100%; font-family: inherit; font-size: 22px; font-weight: 600; padding: 12px 14px;
+    border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text); background: var(--surface);
+  }
+  select.grade-select {
+    font-size: 18px; appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px;
+  }
+
+  .result { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .result-label { font-size: 13px; color: var(--text-muted); }
+  .result-grade { font-size: 32px; font-weight: 700; color: var(--accent); }
+  .result-meta { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+  .result-desc { display: inline-block; margin-top: 10px; margin-right: 8px; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px; background: var(--accent-tint); color: var(--accent); }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+  .status-pass { background: var(--accent-tint); color: var(--accent); }
+  .status-fail { background: var(--fail-tint); color: var(--fail); }
+  .no-match, .error-msg { color: var(--fail); font-size: 14px; font-weight: 500; }
+  .no-match { color: var(--text-muted); font-weight: 400; }
+
+  .section-title { font-size: 17px; font-weight: 700; margin: 8px 0 14px; }
+
+  table.scale-table, table.subjects-table { width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .scale-table th, .scale-table td, .subjects-table th, .subjects-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .scale-table th, .subjects-table th { font-weight: 600; color: var(--text-muted); font-size: 12.5px; background: var(--row-head); }
+  .scale-table tr:last-child td, .subjects-table tr:last-child td { border-bottom: none; }
+  .grade-cell { font-weight: 600; }
+  .scale-table input, .subjects-table input { width: 100%; font-family: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text); }
+  .checkbox-cell { text-align: center; }
+  .row-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 6px 8px; text-decoration: underline; }
+  .row-delete:hover { color: var(--fail); }
+
+  .btn { font-family: inherit; font-size: 14px; font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; }
+  .btn:hover { background: var(--row-head); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-ghost { border-color: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { background: var(--row-head); }
+  .actions-row { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .edit-error { color: var(--fail); font-size: 13px; margin-top: 10px; width: 100%; }
+
+  .subjects-wrap { overflow-x: auto; }
+  .overall-box { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .overall-grid { display: flex; gap: 28px; flex-wrap: wrap; }
+  .overall-item .result-label { display: block; }
+  .overall-item .big { font-size: 24px; font-weight: 700; }
+
+  .cross-link { font-size: 13.5px; color: var(--text-muted); margin: 10px 0 28px; }
+  .link-btn { font: inherit; font-weight: 600; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  .dist-list { list-style: none; margin: 0; padding: 0; }
+  .dist-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .dist-row:last-child { border-bottom: none; }
+  .dist-row .dist-grade { font-weight: 600; }
+  .dist-row .dist-count { color: var(--text-muted); }
+
+  .result-block { margin-bottom: 20px; }
+  .result-block:last-child { margin-bottom: 0; }
+  .result-block-label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.02em; }
+  .result-block-value { font-size: 20px; font-weight: 700; }
+  .result-block-note { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+  .saved-list { list-style: none; margin: 0; padding: 0; }
+  .saved-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .saved-list li:last-child { border-bottom: none; }
+  .saved-list .saved-actions { display: flex; gap: 8px; }
+  .saved-list button { font-size: 13px; }
+
+  .faq details { border: 1px solid var(--border); border-radius: 8px; padding: 4px 16px; margin-bottom: 10px; background: var(--surface); }
+  .faq summary { cursor: pointer; font-weight: 600; padding: 12px 0; font-size: 14.5px; }
+  .faq p { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; line-height: 1.55; }
+  .disclaimer { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--row-head); font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+
+  .legal-content h3 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; }
+  .legal-content h3:first-of-type { margin-top: 4px; }
+  .legal-content p, .legal-content li { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin: 0 0 10px; }
+  .legal-content ul { margin: 0 0 14px; padding-left: 20px; }
+  .legal-content a { color: var(--accent); }
+  .legal-updated { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
+  .back-link { display: inline-block; margin-bottom: 18px; }
+
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  footer.note { margin-top: 40px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
+  .footer-links { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .footer-links button { font: inherit; font-size: 12.5px; background: none; border: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; padding: 4px 6px; }
+  .footer-links button:hover { color: var(--accent); }
+  .footer-links .sep { color: var(--border-strong); }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 28px 16px 60px; }
+    h1 { font-size: 21px; }
+    header.page-head { flex-direction: column; }
+    .card { padding: 18px; }
+    .scale-table th, .scale-table td, .subjects-table th, .subjects-table td { padding: 8px 8px; font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <h1>Grade to Percentage Converter</h1>
+      <p class="subtitle">Convert grades and percentages, calculate multi-subject results, using a grading scale you control.</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-pressed="false">Dark mode</button>
+  </header>
+
+  <nav class="mode-tabs" aria-label="Tool section">
+    <button id="navQuick" aria-selected="true">Quick Convert</button>
+    <button id="navSubjects" aria-selected="false">Marks Calculator</button>
+    <button id="navGrades" aria-selected="false">Grade-Based Calculator</button>
+    <button id="navFaq" aria-selected="false">Help &amp; FAQ</button>
+  </nav>
+
+  <!-- QUICK CONVERT -->
+  <section id="sectionQuick">
+    <div class="card">
+      <label class="field-label" for="pctInput">Percentage</label>
+      <input class="num-input" type="number" id="pctInput" min="0" max="100" step="0.1" value="76" inputmode="decimal" aria-describedby="pctResultBox">
+      <div class="result" id="pctResultBox" role="status" aria-live="polite"></div>
+    </div>
+    <p class="cross-link">Converting more than one grade? Use the <button type="button" class="link-btn" id="goToGradesBtn">Grade-Based Calculator</button>.</p>
+
+    <h2 class="section-title">Grading Scale</h2>
+    <div id="scaleTableWrap" class="subjects-wrap"></div>
+    <div class="actions-row" id="scaleActions"></div>
+  </section>
+
+  <!-- MARKS CALCULATOR -->
+  <section id="sectionSubjects" style="display:none;">
+    <div class="card">
+      <h2 class="section-title" style="margin-top:0;">Your Subjects</h2>
+      <div class="subjects-wrap"><div id="subjectsTableWrap"></div></div>
+      <div class="actions-row">
+        <button class="btn" id="addSubjectBtn" type="button">Add Subject</button>
+        <button class="btn btn-ghost" id="resetSubjectsBtn" type="button">Reset Calculator</button>
+      </div>
+      <p class="edit-error" id="subjectsError" role="alert" aria-live="assertive"></p>
+
+      <div class="overall-box" id="overallBox" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title" style="margin-top:0;">Save &amp; Share</h2>
+      <div class="actions-row">
+        <button class="btn" id="saveCalcBtn" type="button">Save This Calculation</button>
+        <button class="btn" id="copyLinkBtn" type="button">Copy Shareable Link</button>
+      </div>
+      <p class="edit-error" id="saveShareMsg" role="status" aria-live="polite" style="color: var(--accent);"></p>
+      <ul class="saved-list" id="savedList"></ul>
+    </div>
+  </section>
+
+  <!-- GRADE-BASED CALCULATOR -->
+  <section id="sectionGrades" style="display:none;">
+    <div class="card">
+      <h2 class="section-title" style="margin-top:0;">Your Subjects</h2>
+      <div class="subjects-wrap"><div id="gradeSubjectsTableWrap"></div></div>
+      <div class="actions-row">
+        <button class="btn" id="addGradeSubjectBtn" type="button">Add Subject</button>
+        <button class="btn btn-ghost" id="resetGradeSubjectsBtn" type="button">Reset Subjects</button>
+      </div>
+      <p class="edit-error" id="gradeSubjectsError" role="alert" aria-live="assertive"></p>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title" style="margin-top:0;">Grade Distribution</h2>
+      <div id="gradeDistributionBox" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title" style="margin-top:0;">Combined Result</h2>
+      <div id="gradeOverallBox" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="sectionFaq" style="display:none;">
+    <div class="card faq">
+      <h2 class="section-title" style="margin-top:0;">Help &amp; FAQ</h2>
+      <details>
+        <summary>Can I add unlimited subjects?</summary>
+        <p>Yes. Use "Add Subject" in either the Marks Calculator or the Grade-Based Calculator as many times as you need — there's no fixed limit.</p>
+      </details>
+      <details>
+        <summary>Can I create my own grading system?</summary>
+        <p>Yes. Open "Edit Grading Scale" to add, edit, or remove grades, change their percentage ranges, and mark which ones count as passing.</p>
+      </details>
+      <details>
+        <summary>Are my marks stored online?</summary>
+        <p>No. Everything — your subjects, marks, and grading scale — is saved only in your browser's local storage on this device. Nothing is sent to a server.</p>
+      </details>
+      <details>
+        <summary>Can I use this calculator for different schools and universities?</summary>
+        <p>Yes. Since the grading scale is fully editable, you can set it up to match any school, college, or university system.</p>
+      </details>
+      <div class="disclaimer">
+        Grading systems vary widely between institutions, and even between departments at the same institution. This calculator is a general-purpose tool, not an official record. If your result will be used for admissions, transcripts, transfers, or any other official purpose, always confirm the exact grading rules with your school or university directly.
+      </div>
+    </div>
+  </section>
+
+  <!-- TERMS & CONDITIONS -->
+  <section id="sectionTerms" style="display:none;">
+    <div class="card legal-content">
+      <button type="button" class="link-btn back-link" data-goto="quick">← Back to Calculator</button>
+      <h2 class="section-title" style="margin-top:0;">Terms and Conditions</h2>
+      <p class="legal-updated">Last Updated: 01.10.2026</p>
+
+      <p>Welcome to Student Marks &amp; Grade Calculator ("we," "our," or "the Website"). By accessing or using this Website, you agree to these Terms and Conditions. If you do not agree with these terms, please do not use the Website.</p>
+
+      <h3>1. Purpose of the Website</h3>
+      <p>Student Marks &amp; Grade Calculator provides tools for calculating marks, percentages, grades, and related academic results. The calculator is provided for informational and educational purposes only. It is intended to help users perform calculations and understand their results.</p>
+
+      <h3>2. User Responsibility</h3>
+      <p>You are responsible for entering accurate and complete information into the calculator, including:</p>
+      <ul>
+        <li>Subject names</li>
+        <li>Marks obtained</li>
+        <li>Maximum marks</li>
+        <li>Grades</li>
+        <li>Percentages</li>
+        <li>Grading-system information</li>
+        <li>Any other information required by the calculator</li>
+      </ul>
+      <p>We are not responsible for incorrect results caused by incorrect, incomplete, or outdated information entered by the user.</p>
+
+      <h3>3. Grading Systems May Differ</h3>
+      <p>Grading systems, percentage conversions, passing requirements, and calculation methods can vary between schools, educational boards, universities, colleges, courses, examinations, and countries or regions.</p>
+      <p>Any grading-system presets provided by the Website are intended as general tools and may not apply to every institution or examination. Users should verify the applicable grading rules with their school, college, university, examination board, or other relevant official authority.</p>
+
+      <h3>4. No Guarantee of Official Results</h3>
+      <p>The results produced by this Website are not official academic results. We do not guarantee that a calculated percentage, grade, or other result will be accepted by schools, colleges, universities, examination boards, government authorities, employers, scholarship providers, admission authorities, or any other organization.</p>
+      <p>When a calculation is being used for admission, eligibility, employment, scholarships, examinations, applications, or any other official purpose, you should verify the result using the applicable official rules or documents.</p>
+
+      <h3>5. Accuracy of Calculations</h3>
+      <p>We make reasonable efforts to ensure that the calculator performs its intended mathematical calculations correctly. However, we do not guarantee that the Website will always be completely free from errors, bugs, interruptions, or inaccuracies. You should independently verify important calculations before relying on them for official or consequential purposes.</p>
+
+      <h3>6. Custom Grading Systems</h3>
+      <p>The Website may allow users to create or modify grading systems. Users are responsible for ensuring that any custom grading scale, percentage range, passing requirement, or other rule they enter is accurate. We are not responsible for errors resulting from user-created or user-modified grading systems.</p>
+
+      <h3>7. Changes to the Website</h3>
+      <p>We may modify, update, add, or remove features, calculations, grading-system presets, or other parts of the Website at any time without prior notice. We may also correct calculation or software errors when identified.</p>
+
+      <h3>8. Availability</h3>
+      <p>We do not guarantee that the Website will always be available, uninterrupted, or error-free. The Website may occasionally be unavailable due to maintenance, technical problems, updates, or circumstances beyond our control.</p>
+
+      <h3>9. Third-Party Services</h3>
+      <p>The Website may use third-party services in the future, such as hosting providers, analytics services, advertising networks, or other services. The use of such services may be subject to their own terms and policies.</p>
+
+      <h3>10. Limitation of Liability</h3>
+      <p>To the extent permitted by applicable law, we are not responsible for any loss, damage, expense, or other consequence resulting from reliance on information or calculations provided by the Website. This includes, without limitation, consequences relating to academic admissions, examination results, eligibility, scholarships, employment, or other official decisions.</p>
+
+      <h3>11. Intellectual Property</h3>
+      <p>Unless otherwise stated, the Website's original design, text, code, graphics, logos, and other content are owned by or licensed to the Website operator. You may use the calculator for personal and legitimate purposes, but you may not reproduce, copy, redistribute, or commercially exploit the Website's content or code without appropriate authorization, where required.</p>
+
+      <h3>12. Privacy</h3>
+      <p>Your use of the Website is also subject to our <button type="button" class="link-btn" data-goto="privacy">Privacy Policy</button>, which explains how information may be handled when you use our services.</p>
+
+      <h3>13. Contact</h3>
+      <p>If you have questions about these Terms and Conditions, you can contact us at: <a href="mailto:makesense6011@gmail.com">makesense6011@gmail.com</a></p>
+
+      <h3>14. Changes to These Terms</h3>
+      <p>We may update these Terms and Conditions from time to time. Any changes will be posted on this page with an updated "Last Updated" date. Your continued use of the Website after changes are posted means you accept the updated Terms.</p>
+    </div>
+  </section>
+
+  <!-- PRIVACY POLICY -->
+  <section id="sectionPrivacy" style="display:none;">
+    <div class="card legal-content">
+      <button type="button" class="link-btn back-link" data-goto="quick">← Back to Calculator</button>
+      <h2 class="section-title" style="margin-top:0;">Privacy Policy</h2>
+      <p class="legal-updated">Last Updated: 01.10.2026</p>
+
+      <p>This Privacy Policy explains how Student Marks &amp; Grade Calculator ("we," "our," or "the Website") handles information when you use the Website.</p>
+
+      <h3>1. Information We Do Not Collect</h3>
+      <p>The Website does not require an account, login, or registration. We do not collect your name, email address, or other personal identifiers through the calculator itself.</p>
+
+      <h3>2. Local Storage</h3>
+      <p>The subjects, marks, grades, grading scales, saved calculations, and theme preference you enter are stored only in your browser's local storage, on your own device. This data is not transmitted to us, uploaded to a server, or visible to anyone else. Clearing your browser data or using a different browser or device will remove or not show this stored information.</p>
+
+      <h3>3. Shareable Links</h3>
+      <p>If you use the "Copy Shareable Link" feature, your subject and grade data is encoded directly into the link itself. Anyone you share that link with will be able to see the data encoded in it, so only share links you are comfortable sharing.</p>
+
+      <h3>4. Cookies and Analytics</h3>
+      <p>The Website does not currently use tracking cookies or analytics services. If this changes in the future, this Privacy Policy will be updated to describe what is used and why.</p>
+
+      <h3>5. Third-Party Services</h3>
+      <p>The Website may in the future use third-party services such as hosting providers, analytics services, or advertising networks. Any such services would be subject to their own privacy policies, and we would update this page accordingly.</p>
+
+      <h3>6. Children's Privacy</h3>
+      <p>The Website is intended as a general academic tool and does not knowingly collect personal information from anyone, including children. Since no personal information is collected by the Website itself, no account or profile of any user, including minors, is created or stored by us.</p>
+
+      <h3>7. Data Security</h3>
+      <p>Because your calculator data stays in your browser's local storage rather than on our servers, its security depends on your own device and browser. We recommend keeping your device and browser up to date.</p>
+
+      <h3>8. Changes to This Policy</h3>
+      <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date. Continued use of the Website after changes are posted means you accept the updated Policy.</p>
+
+      <h3>9. Contact</h3>
+      <p>If you have questions about this Privacy Policy, you can contact us at: <a href="mailto:makesense6011@gmail.com">makesense6011@gmail.com</a></p>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="sectionAbout" style="display:none;">
+    <div class="card legal-content">
+      <button type="button" class="link-btn back-link" data-goto="quick">← Back to Calculator</button>
+      <h2 class="section-title" style="margin-top:0;">About</h2>
+      <p>Student Marks &amp; Grade Calculator is a free tool for converting between percentages and grades, calculating marks across multiple subjects, and working out grade-based results — all using a grading scale you can fully customize.</p>
+
+      <h3>What you can do here</h3>
+      <ul>
+        <li><strong>Quick Convert</strong> — look up the grade for a single percentage.</li>
+        <li><strong>Marks Calculator</strong> — add subjects with marks and maximum marks to get per-subject and overall percentages, grades, and pass/fail status.</li>
+        <li><strong>Grade-Based Calculator</strong> — enter a grade per subject to see the grade distribution and, where mathematically valid, a combined result.</li>
+        <li><strong>Editable Grading Scale</strong> — the default scale is modeled on the Kerala Board system, but every grade, range, and pass/fail flag can be edited to match your own school, college, or university.</li>
+      </ul>
+
+      <h3>Why it works this way</h3>
+      <p>Letter grades represent a range of percentages, not one exact number. Rather than guessing a single percentage for a grade, this tool always shows the true range, and is upfront when a combined result genuinely can't be determined from the information given.</p>
+
+      <h3>Who it's for</h3>
+      <p>Students, parents, and teachers who want a quick, private way to work out results without creating an account or sending data anywhere. Everything you enter stays in your own browser.</p>
+
+      <p>This Website is an independent tool and is not affiliated with any school, board, or university. See our <button type="button" class="link-btn" data-goto="terms">Terms and Conditions</button> for details on how results should be used.</p>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="sectionContact" style="display:none;">
+    <div class="card legal-content">
+      <button type="button" class="link-btn back-link" data-goto="quick">← Back to Calculator</button>
+      <h2 class="section-title" style="margin-top:0;">Contact</h2>
+      <p>Have a question, found a bug, or want to suggest a feature? We'd like to hear from you.</p>
+      <p>Email: <a href="mailto:makesense6011@gmail.com">makesense6011@gmail.com</a></p>
+      <p>We aim to respond to messages as soon as we can. Please note this is a small, independently run tool, so response times may vary.</p>
+    </div>
+  </section>
+
+  <footer class="note">
+    Your grading scale, subjects, and calculations are saved on this device only.
+    <div class="footer-links">
+      <button type="button" data-goto="terms">Terms &amp; Conditions</button><span class="sep">·</span>
+      <button type="button" data-goto="privacy">Privacy Policy</button><span class="sep">·</span>
+      <button type="button" data-goto="about">About</button><span class="sep">·</span>
+      <button type="button" data-goto="contact">Contact</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  var STORE = {
+    scale: "gc_scale_v2",
+    subjects: "gc_subjects_v2",
+    gradeSubjects: "gc_grade_subjects_v1",
+    theme: "gc_theme_v2",
+    saved: "gc_saved_calcs_v2"
+  };
+
+  var DEFAULT_SCALE = [
+    { grade: "A+", min: 90, max: 100, desc: "Outstanding", pass: true },
+    { grade: "A",  min: 80, max: 89,  desc: "Excellent",   pass: true },
+    { grade: "B+", min: 70, max: 79,  desc: "Very Good",   pass: true },
+    { grade: "B",  min: 60, max: 69,  desc: "Good",        pass: true },
+    { grade: "C+", min: 50, max: 59,  desc: "Satisfactory",pass: true },
+    { grade: "C",  min: 40, max: 49,  desc: "Adequate",    pass: true },
+    { grade: "D",  min: 33, max: 39,  desc: "Marginal",    pass: true },
+    { grade: "F",  min: 0,  max: 32,  desc: "Fail",        pass: false }
+  ];
+
+  function saveToLocalStorage(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) { return false; }
+  }
+  function loadFromLocalStorage(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch (e) { return fallback; }
+  }
+
+  function saveGradingSystem(s) { saveToLocalStorage(STORE.scale, s); }
+  function loadGradingSystem() {
+    var s = loadFromLocalStorage(STORE.scale, null);
+    return (Array.isArray(s) && s.length) ? s : DEFAULT_SCALE.map(function(r){ return Object.assign({}, r); });
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+    themeToggle.setAttribute("aria-pressed", theme === "dark");
+    saveToLocalStorage(STORE.theme, theme);
+  }
+
+  function calculatePercentage(marks, max) {
+    if (max === 0) return NaN;
+    return (marks / max) * 100;
+  }
+
+  function sortedScale() { return scale.slice().sort(function(a, b) { return b.max - a.max; }); }
+
+  function calculateGrade(pct) {
+    var s = sortedScale();
+    for (var i = 0; i < s.length; i++) {
+      if (pct >= s[i].min && pct <= s[i].max) return s[i];
+    }
+    return null;
+  }
+
+  function validateMarks(marks, max) {
+    if (marks === "" || max === "" || marks === null || max === null) return "Enter marks and maximum marks.";
+    if (isNaN(marks) || isNaN(max)) return "Marks must be numbers.";
+    if (max <= 0) return "Maximum marks must be greater than 0.";
+    if (marks < 0) return "Marks cannot be negative.";
+    if (marks > max) return "Marks cannot exceed maximum marks.";
+    return null;
+  }
+
+  function validateGradingSystem(s) {
+    if (!s.length) return "Add at least one grade.";
+    for (var i = 0; i < s.length; i++) {
+      var r = s[i];
+      if (!r.grade || String(r.grade).trim() === "") return "Every grade needs a label.";
+      if (r.min === "" || r.max === "" || isNaN(r.min) || isNaN(r.max)) return "Minimum and maximum must be numbers.";
+      if (Number(r.min) > Number(r.max)) return "Minimum cannot exceed maximum for " + r.grade + ".";
+    }
+    var sorted = s.slice().sort(function(a, b) { return a.min - b.min; });
+    for (var j = 0; j < sorted.length - 1; j++) {
+      if (Number(sorted[j].max) >= Number(sorted[j + 1].min)) return "Ranges for " + sorted[j].grade + " and " + sorted[j + 1].grade + " overlap.";
+      if (Number(sorted[j].max) + 1 < Number(sorted[j + 1].min)) return "There's a gap between " + sorted[j].grade + " and " + sorted[j + 1].grade + " with no grade assigned.";
+    }
+    return null;
+  }
+
+  function calculateResults(subjectList) {
+    var totalMarks = 0, totalMax = 0, rows = [];
+    subjectList.forEach(function(subj) {
+      var marks = parseFloat(subj.marks), max = parseFloat(subj.max);
+      var err = validateMarks(subj.marks === "" ? "" : marks, subj.max === "" ? "" : max);
+      var pct = null, grade = null;
+      if (!err) { pct = calculatePercentage(marks, max); grade = calculateGrade(pct); totalMarks += marks; totalMax += max; }
+      rows.push({ subject: subj, error: err, pct: pct, grade: grade });
+    });
+    var overallPct = totalMax > 0 ? calculatePercentage(totalMarks, totalMax) : null;
+    var overallGrade = overallPct !== null ? calculateGrade(overallPct) : null;
+    return { rows: rows, totalMarks: totalMarks, totalMax: totalMax, overallPct: overallPct, overallGrade: overallGrade };
+  }
+
+  // Computes, from a list of {grade} entries and the current scale:
+  // (1) a grade distribution, (2) an overall grade IF the scale defines one
+  // unambiguously, and (3) the possible overall percentage range implied by
+  // averaging each subject's known min/max band (equal weight per subject).
+  // This never invents a fake exact percentage for a letter grade.
+  function calculateGradeBasedResults(gradeSubjectList) {
+    var s = sortedScale();
+    var rows = gradeSubjectList.map(function(subj) {
+      var match = s.filter(function(r) { return r.grade === subj.grade; })[0] || null;
+      return { subject: subj, row: match };
+    });
+    var valid = rows.filter(function(r) { return r.row; });
+
+    var distribution = [];
+    s.forEach(function(scaleRow) {
+      var count = valid.filter(function(r) { return r.row.grade === scaleRow.grade; }).length;
+      if (count > 0) distribution.push({ grade: scaleRow.grade, count: count });
+    });
+
+    var avgMin = null, avgMax = null, overallGrade = null;
+    if (valid.length) {
+      avgMin = valid.reduce(function(sum, r) { return sum + r.row.min; }, 0) / valid.length;
+      avgMax = valid.reduce(function(sum, r) { return sum + r.row.max; }, 0) / valid.length;
+      var allSame = valid.every(function(r) { return r.row.grade === valid[0].row.grade; });
+      if (allSame) {
+        overallGrade = valid[0].row;
+      } else {
+        var containing = s.filter(function(r) { return r.min <= avgMin && r.max >= avgMax; });
+        if (containing.length === 1) overallGrade = containing[0];
+      }
+    }
+
+    return { rows: rows, invalidCount: rows.length - valid.length, distribution: distribution, avgMin: avgMin, avgMax: avgMax, overallGrade: overallGrade };
+  }
+
+  var scale = loadGradingSystem();
+  var subjects = loadFromLocalStorage(STORE.subjects, [
+    { id: 1, name: "Mathematics", marks: "", max: 100 },
+    { id: 2, name: "Science", marks: "", max: 100 }
+  ]);
+  var editingScale = false, savedScaleBackup = null;
+  var nextSubjectId = subjects.reduce(function(m, s) { return Math.max(m, s.id); }, 0) + 1;
+
+  var gradeSubjects = loadFromLocalStorage(STORE.gradeSubjects, null);
+  if (!Array.isArray(gradeSubjects) || !gradeSubjects.length) {
+    var defaultGrades = sortedScale();
+    gradeSubjects = [
+      { id: 1, name: "Malayalam", grade: defaultGrades[0] ? defaultGrades[0].grade : "" },
+      { id: 2, name: "English", grade: defaultGrades[1] ? defaultGrades[1].grade : (defaultGrades[0] ? defaultGrades[0].grade : "") }
+    ];
+  }
+  var nextGradeSubjectId = gradeSubjects.reduce(function(m, s) { return Math.max(m, s.id); }, 0) + 1;
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+
+  var themeToggle = document.getElementById("themeToggle");
+  var navQuick = document.getElementById("navQuick"), navSubjects = document.getElementById("navSubjects"), navGrades = document.getElementById("navGrades"), navFaq = document.getElementById("navFaq");
+  var sectionQuick = document.getElementById("sectionQuick"), sectionSubjects = document.getElementById("sectionSubjects"), sectionGrades = document.getElementById("sectionGrades"), sectionFaq = document.getElementById("sectionFaq");
+  var sectionTerms = document.getElementById("sectionTerms"), sectionPrivacy = document.getElementById("sectionPrivacy"), sectionAbout = document.getElementById("sectionAbout"), sectionContact = document.getElementById("sectionContact");
+  var pctInput = document.getElementById("pctInput");
+  var pctResultBox = document.getElementById("pctResultBox");
+  var goToGradesBtn = document.getElementById("goToGradesBtn");
+  var scaleTableWrap = document.getElementById("scaleTableWrap"), scaleActions = document.getElementById("scaleActions");
+  var subjectsTableWrap = document.getElementById("subjectsTableWrap"), subjectsError = document.getElementById("subjectsError");
+  var overallBox = document.getElementById("overallBox");
+  var addSubjectBtn = document.getElementById("addSubjectBtn"), resetSubjectsBtn = document.getElementById("resetSubjectsBtn");
+  var saveCalcBtn = document.getElementById("saveCalcBtn"), copyLinkBtn = document.getElementById("copyLinkBtn"), saveShareMsg = document.getElementById("saveShareMsg");
+  var savedList = document.getElementById("savedList");
+  var gradeSubjectsTableWrap = document.getElementById("gradeSubjectsTableWrap"), gradeSubjectsError = document.getElementById("gradeSubjectsError");
+  var addGradeSubjectBtn = document.getElementById("addGradeSubjectBtn"), resetGradeSubjectsBtn = document.getElementById("resetGradeSubjectsBtn");
+  var gradeDistributionBox = document.getElementById("gradeDistributionBox"), gradeOverallBox = document.getElementById("gradeOverallBox");
+
+  applyTheme(loadFromLocalStorage(STORE.theme, "light"));
+  themeToggle.addEventListener("click", function() {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  var ALL_SECTIONS = [sectionQuick, sectionSubjects, sectionGrades, sectionFaq, sectionTerms, sectionPrivacy, sectionAbout, sectionContact];
+  var TOP_NAV_BUTTONS = [navQuick, navSubjects, navGrades, navFaq];
+  var SECTION_BY_KEY = { quick: sectionQuick, subjects: sectionSubjects, grades: sectionGrades, faq: sectionFaq, terms: sectionTerms, privacy: sectionPrivacy, about: sectionAbout, contact: sectionContact };
+
+  function setNav(which) {
+    TOP_NAV_BUTTONS.forEach(function(b) { b.setAttribute("aria-selected", "false"); });
+    ALL_SECTIONS.forEach(function(s) { s.style.display = "none"; });
+    var target = SECTION_BY_KEY[which];
+    if (!target) return;
+    target.style.display = "";
+    if (which === "quick") navQuick.setAttribute("aria-selected", "true");
+    if (which === "subjects") navSubjects.setAttribute("aria-selected", "true");
+    if (which === "grades") navGrades.setAttribute("aria-selected", "true");
+    if (which === "faq") navFaq.setAttribute("aria-selected", "true");
+    window.scrollTo(0, 0);
+  }
+  navQuick.addEventListener("click", function() { setNav("quick"); });
+  navSubjects.addEventListener("click", function() { setNav("subjects"); });
+  navGrades.addEventListener("click", function() { setNav("grades"); });
+  navFaq.addEventListener("click", function() { setNav("faq"); });
+  goToGradesBtn.addEventListener("click", function() { setNav("grades"); });
+
+  // Delegated so it covers the footer links, the "Back to Calculator" links,
+  // and the cross-links inside the legal pages (e.g. Terms → Privacy) alike.
+  document.body.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-goto]");
+    if (!btn) return;
+    setNav(btn.getAttribute("data-goto"));
+  });
+
+  pctInput.addEventListener("input", renderQuickResult);
+
+  function renderGradeOptionsHTML(selected) {
+    var s = sortedScale();
+    return s.map(function(row) {
+      return '<option value="' + esc(row.grade) + '"' + (row.grade === selected ? " selected" : "") + '>' + esc(row.grade) + '</option>';
+    }).join("");
+  }
+
+  function statusPill(pass) {
+    return '<div><span class="status-pill ' + (pass ? "status-pass" : "status-fail") + '">' + (pass ? "✓ Passing" : "✗ Failing") + '</span></div>';
+  }
+
+  function renderQuickResult() {
+    var val = pctInput.value;
+    if (val === "") { pctResultBox.innerHTML = '<p class="no-match">Enter a percentage to see the grade.</p>'; return; }
+    var pct = parseFloat(val);
+    if (isNaN(pct)) { pctResultBox.innerHTML = '<p class="error-msg">Enter a valid number.</p>'; return; }
+    var row = calculateGrade(pct);
+    if (!row) { pctResultBox.innerHTML = '<p class="error-msg">No grade is defined for this percentage. Check your grading scale for gaps.</p>'; return; }
+    pctResultBox.innerHTML =
+      '<span class="result-label">Grade</span>' +
+      '<div class="result-grade">' + esc(row.grade) + '</div>' +
+      '<div class="result-meta">Range: ' + row.min + '–' + row.max + '%</div>' +
+      '<span class="result-desc">' + esc(row.desc) + '</span>' + statusPill(row.pass);
+  }
+
+  function formatRange(row) {
+    if (!row) return "";
+    return row.max >= 100 ? (row.min + "%+") : (row.min + "–" + row.max + "%");
+  }
+
+  function renderScaleTable() {
+    var s = sortedScale();
+    var html = '<table class="scale-table"><caption class="visually-hidden">Grading scale</caption><thead><tr>' +
+      '<th scope="col">Grade</th><th scope="col">Minimum</th><th scope="col">Maximum</th><th scope="col">Description</th><th scope="col">Passing</th>' +
+      (editingScale ? '<th scope="col"><span class="visually-hidden">Remove</span></th>' : '') + '</tr></thead><tbody>';
+
+    s.forEach(function(row) {
+      var idx = scale.indexOf(row);
+      if (editingScale) {
+        html += '<tr>' +
+          '<td><label class="visually-hidden" for="g-grade-' + idx + '">Grade label</label><input id="g-grade-' + idx + '" data-idx="' + idx + '" data-field="grade" value="' + esc(row.grade) + '"></td>' +
+          '<td><label class="visually-hidden" for="g-min-' + idx + '">Minimum percent</label><input id="g-min-' + idx + '" data-idx="' + idx + '" data-field="min" type="number" value="' + row.min + '"></td>' +
+          '<td><label class="visually-hidden" for="g-max-' + idx + '">Maximum percent</label><input id="g-max-' + idx + '" data-idx="' + idx + '" data-field="max" type="number" value="' + row.max + '"></td>' +
+          '<td><label class="visually-hidden" for="g-desc-' + idx + '">Description</label><input id="g-desc-' + idx + '" data-idx="' + idx + '" data-field="desc" value="' + esc(row.desc) + '"></td>' +
+          '<td class="checkbox-cell"><label class="visually-hidden" for="g-pass-' + idx + '">Counts as passing</label><input id="g-pass-' + idx + '" type="checkbox" data-idx="' + idx + '" data-field="pass" ' + (row.pass ? "checked" : "") + '></td>' +
+          '<td><button class="row-delete" type="button" data-del="' + idx + '">Remove</button></td>' +
+          '</tr>';
+      } else {
+        html += '<tr><td class="grade-cell">' + esc(row.grade) + '</td><td>' + row.min + '</td><td>' + row.max + '</td><td>' + esc(row.desc) + '</td><td>' + (row.pass ? "Pass" : "Fail") + '</td></tr>';
+      }
+    });
+    html += '</tbody></table>';
+    scaleTableWrap.innerHTML = html;
+
+    if (editingScale) {
+      scaleTableWrap.querySelectorAll("input").forEach(function(inp) {
+        inp.addEventListener("input", function() {
+          var idx = parseInt(inp.getAttribute("data-idx"), 10);
+          var field = inp.getAttribute("data-field");
+          if (field === "pass") scale[idx].pass = inp.checked;
+          else if (field === "min" || field === "max") scale[idx][field] = inp.value === "" ? "" : parseFloat(inp.value);
+          else scale[idx][field] = inp.value;
+        });
+      });
+      scaleTableWrap.querySelectorAll("[data-del]").forEach(function(btn) {
+        btn.addEventListener("click", function() { scale.splice(parseInt(btn.getAttribute("data-del"), 10), 1); renderScaleTable(); });
+      });
+    }
+  }
+
+  function renderScaleActions() {
+    scaleActions.innerHTML = "";
+    var err = document.createElement("p");
+    err.className = "edit-error"; err.id = "scaleEditError"; err.setAttribute("role", "alert");
+    if (!editingScale) {
+      var editBtn = document.createElement("button");
+      editBtn.className = "btn"; editBtn.type = "button"; editBtn.textContent = "Edit Grading Scale";
+      editBtn.addEventListener("click", function() {
+        savedScaleBackup = scale.map(function(r) { return Object.assign({}, r); });
+        editingScale = true;
+        renderScaleTable(); renderScaleActions();
+      });
+      scaleActions.appendChild(editBtn);
+    } else {
+      var addBtn = document.createElement("button");
+      addBtn.className = "btn"; addBtn.type = "button"; addBtn.textContent = "Add Grade";
+      addBtn.addEventListener("click", function() { scale.push({ grade: "New", min: 0, max: 0, desc: "", pass: true }); renderScaleTable(); });
+
+      var saveBtn = document.createElement("button");
+      saveBtn.className = "btn btn-primary"; saveBtn.type = "button"; saveBtn.textContent = "Save Changes";
+      saveBtn.addEventListener("click", function() {
+        var msg = validateGradingSystem(scale);
+        if (msg) { err.textContent = msg; return; }
+        saveGradingSystem(scale);
+        editingScale = false;
+        renderAll();
+      });
+
+      var cancelBtn = document.createElement("button");
+      cancelBtn.className = "btn btn-ghost"; cancelBtn.type = "button"; cancelBtn.textContent = "Cancel";
+      cancelBtn.addEventListener("click", function() { scale = savedScaleBackup; editingScale = false; renderAll(); });
+
+      var resetBtn = document.createElement("button");
+      resetBtn.className = "btn btn-ghost"; resetBtn.type = "button"; resetBtn.textContent = "Reset to Default";
+      resetBtn.addEventListener("click", function() { scale = DEFAULT_SCALE.map(function(r) { return Object.assign({}, r); }); renderScaleTable(); });
+
+      [addBtn, saveBtn, cancelBtn, resetBtn].forEach(function(b) { scaleActions.appendChild(b); });
+      scaleActions.appendChild(err);
+    }
+  }
+
+  function addSubject() {
+    subjects.push({ id: nextSubjectId++, name: "New Subject", marks: "", max: 100 });
+    saveToLocalStorage(STORE.subjects, subjects);
+    renderSubjects();
+  }
+  function removeSubject(id) {
+    subjects = subjects.filter(function(s) { return s.id !== id; });
+    saveToLocalStorage(STORE.subjects, subjects);
+    renderSubjects();
+  }
+
+  // Full structural rebuild — call this ONLY when subjects are added, removed,
+  // reordered, or on initial load. Never call this from an 'input' handler:
+  // recreating a focused <input> mid-keystroke is what closes the Android
+  // keyboard after the first character.
+  function renderSubjectsTable() {
+    var html = '<table class="subjects-table"><caption class="visually-hidden">Subjects and marks</caption><thead><tr>' +
+      '<th scope="col">Subject</th><th scope="col">Marks Obtained</th><th scope="col">Maximum Marks</th><th scope="col">Percentage</th><th scope="col">Grade</th><th scope="col"><span class="visually-hidden">Remove</span></th>' +
+      '</tr></thead><tbody>';
+    subjects.forEach(function(s) {
+      html += '<tr data-row="' + s.id + '">' +
+        '<td><label class="visually-hidden" id="s-name-label-' + s.id + '" for="s-name-' + s.id + '">Subject name</label><input id="s-name-' + s.id + '" data-id="' + s.id + '" data-field="name" value="' + esc(s.name) + '"></td>' +
+        '<td><label class="visually-hidden" id="s-marks-label-' + s.id + '" for="s-marks-' + s.id + '">Marks obtained for ' + esc(s.name) + '</label><input id="s-marks-' + s.id + '" data-id="' + s.id + '" data-field="marks" type="number" inputmode="decimal" min="0" value="' + esc(s.marks) + '"></td>' +
+        '<td><label class="visually-hidden" id="s-max-label-' + s.id + '" for="s-max-' + s.id + '">Maximum marks for ' + esc(s.name) + '</label><input id="s-max-' + s.id + '" data-id="' + s.id + '" data-field="max" type="number" inputmode="decimal" min="1" value="' + esc(s.max) + '"></td>' +
+        '<td id="pct-cell-' + s.id + '"></td>' +
+        '<td class="grade-cell" id="grade-cell-' + s.id + '"></td>' +
+        '<td><button class="row-delete" type="button" data-remove="' + s.id + '">Remove</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    subjectsTableWrap.innerHTML = html;
+    subjects.forEach(function(s) { updateSubjectRowDisplay(s.id); });
+  }
+
+  // Lightweight update: recompute and write only the percentage/grade text for
+  // one row. Never touches or replaces the <input> elements, so focus, the
+  // caret position, and the on-screen keyboard are all left alone.
+  function updateSubjectRowDisplay(id) {
+    var subj = subjects.filter(function(s) { return s.id === id; })[0];
+    var pctCell = document.getElementById("pct-cell-" + id);
+    var gradeCell = document.getElementById("grade-cell-" + id);
+    if (!subj || !pctCell || !gradeCell) return;
+    var marksNum = subj.marks === "" ? "" : parseFloat(subj.marks);
+    var maxNum = subj.max === "" ? "" : parseFloat(subj.max);
+    var err = validateMarks(subj.marks === "" ? "" : marksNum, subj.max === "" ? "" : maxNum);
+    if (err) {
+      pctCell.textContent = "";
+      var span = document.createElement("span");
+      span.className = "error-msg"; span.textContent = err;
+      pctCell.appendChild(span);
+      gradeCell.textContent = "—";
+      return;
+    }
+    var pct = calculatePercentage(marksNum, maxNum);
+    var g = calculateGrade(pct);
+    pctCell.textContent = pct.toFixed(1) + "%";
+    gradeCell.textContent = g ? g.grade : "No match";
+  }
+
+  // Single delegated listener for the whole table, attached once. Typing in
+  // any marks/max/name field updates the data model and just the two result
+  // cells for that row — the input the user is typing into is never rebuilt.
+  subjectsTableWrap.addEventListener("input", function(e) {
+    var inp = e.target;
+    if (!inp.matches("input[data-id]")) return;
+    var id = parseInt(inp.getAttribute("data-id"), 10);
+    var field = inp.getAttribute("data-field");
+    var subj = subjects.filter(function(s) { return s.id === id; })[0];
+    if (!subj) return;
+    subj[field] = inp.value;
+    saveToLocalStorage(STORE.subjects, subjects);
+    if (field === "name") {
+      var marksLabel = document.getElementById("s-marks-label-" + id);
+      var maxLabel = document.getElementById("s-max-label-" + id);
+      if (marksLabel) marksLabel.textContent = "Marks obtained for " + (inp.value || "subject");
+      if (maxLabel) maxLabel.textContent = "Maximum marks for " + (inp.value || "subject");
+    } else {
+      updateSubjectRowDisplay(id);
+    }
+    renderOverall();
+  });
+
+  subjectsTableWrap.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-remove]");
+    if (!btn) return;
+    removeSubject(parseInt(btn.getAttribute("data-remove"), 10));
+  });
+
+  function renderOverall() {
+    if (!subjects.length) { overallBox.innerHTML = '<p class="no-match">Add a subject to see your overall result.</p>'; subjectsError.textContent = ""; return; }
+    var result = calculateResults(subjects);
+    var firstError = result.rows.filter(function(r) { return r.error; })[0];
+    subjectsError.textContent = firstError ? ("Check " + firstError.subject.name + ": " + firstError.error) : "";
+
+    if (result.overallPct === null) { overallBox.innerHTML = '<p class="no-match">Fix the marks above to see your overall result.</p>'; return; }
+    var g = result.overallGrade;
+    overallBox.innerHTML =
+      '<div class="overall-grid">' +
+        '<div class="overall-item"><span class="result-label">Total</span><div class="big">' + result.totalMarks + ' / ' + result.totalMax + '</div></div>' +
+        '<div class="overall-item"><span class="result-label">Overall Percentage</span><div class="big">' + result.overallPct.toFixed(1) + '%</div></div>' +
+        '<div class="overall-item"><span class="result-label">Overall Grade</span><div class="big">' + (g ? esc(g.grade) : "No match") + '</div></div>' +
+      '</div>' + (g ? statusPill(g.pass) : '');
+  }
+
+  function renderSubjects() { renderSubjectsTable(); renderOverall(); }
+
+  addSubjectBtn.addEventListener("click", addSubject);
+  resetSubjectsBtn.addEventListener("click", function() {
+    if (!confirm("Reset the calculator? This clears all subjects and marks.")) return;
+    subjects = []; nextSubjectId = 1;
+    saveToLocalStorage(STORE.subjects, subjects);
+    renderSubjects();
+  });
+
+  function refreshSavedList() {
+    var saved = loadFromLocalStorage(STORE.saved, {});
+    var names = Object.keys(saved);
+    if (!names.length) { savedList.innerHTML = '<li>No saved calculations yet.</li>'; return; }
+    savedList.innerHTML = names.map(function(name) {
+      return '<li><span>' + esc(name) + '</span><span class="saved-actions">' +
+        '<button class="btn" type="button" data-load="' + esc(name) + '">Load</button>' +
+        '<button class="btn btn-ghost" type="button" data-remove-saved="' + esc(name) + '">Delete</button></span></li>';
+    }).join("");
+    savedList.querySelectorAll("[data-load]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var saved2 = loadFromLocalStorage(STORE.saved, {});
+        var data = saved2[btn.getAttribute("data-load")];
+        if (data) {
+          subjects = data.map(function(s) { return Object.assign({}, s); });
+          nextSubjectId = subjects.reduce(function(m, s) { return Math.max(m, s.id); }, 0) + 1;
+          saveToLocalStorage(STORE.subjects, subjects);
+          renderSubjects();
+          saveShareMsg.textContent = "Loaded.";
+        }
+      });
+    });
+    savedList.querySelectorAll("[data-remove-saved]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var saved2 = loadFromLocalStorage(STORE.saved, {});
+        delete saved2[btn.getAttribute("data-remove-saved")];
+        saveToLocalStorage(STORE.saved, saved2);
+        refreshSavedList();
+      });
+    });
+  }
+
+  saveCalcBtn.addEventListener("click", function() {
+    var name = prompt("Name this calculation:", "My calculation");
+    if (!name) return;
+    var saved = loadFromLocalStorage(STORE.saved, {});
+    saved[name] = subjects;
+    saveToLocalStorage(STORE.saved, saved);
+    saveShareMsg.textContent = 'Saved as "' + name + '".';
+    refreshSavedList();
+  });
+
+  copyLinkBtn.addEventListener("click", function() {
+    var encoded = encodeURIComponent(btoa(JSON.stringify(subjects)));
+    var url = location.origin + location.pathname + "#data=" + encoded;
+    var done = function() { saveShareMsg.textContent = "Link copied to clipboard."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(function() { saveShareMsg.textContent = url; });
+    } else { saveShareMsg.textContent = url; }
+  });
+
+  function loadFromUrlHash() {
+    var m = location.hash.match(/data=([^&]+)/);
+    if (!m) return;
+    try {
+      var data = JSON.parse(atob(decodeURIComponent(m[1])));
+      if (Array.isArray(data)) {
+        subjects = data;
+        nextSubjectId = subjects.reduce(function(mx, s) { return Math.max(mx, s.id || 0); }, 0) + 1;
+        saveToLocalStorage(STORE.subjects, subjects);
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- grade-based calculator ---------- */
+  // Structural rebuild only — called on add/remove/load, never on every
+  // keystroke or selection change (same rule as the marks table).
+  function renderGradeSubjectsTable() {
+    var html = '<table class="subjects-table"><caption class="visually-hidden">Subjects and grades</caption><thead><tr>' +
+      '<th scope="col">Subject</th><th scope="col">Grade</th><th scope="col">Percentage Range</th><th scope="col"><span class="visually-hidden">Remove</span></th>' +
+      '</tr></thead><tbody>';
+    gradeSubjects.forEach(function(s) {
+      html += '<tr data-row="' + s.id + '">' +
+        '<td><label class="visually-hidden" id="gs-name-label-' + s.id + '" for="gs-name-' + s.id + '">Subject name</label><input id="gs-name-' + s.id + '" data-id="' + s.id + '" data-field="name" value="' + esc(s.name) + '"></td>' +
+        '<td><label class="visually-hidden" for="gs-grade-' + s.id + '">Grade for ' + esc(s.name) + '</label><select class="grade-select" id="gs-grade-' + s.id + '" data-id="' + s.id + '" data-field="grade">' + renderGradeOptionsHTML(s.grade) + '</select></td>' +
+        '<td id="gs-range-cell-' + s.id + '"></td>' +
+        '<td><button class="row-delete" type="button" data-remove="' + s.id + '">Remove</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    gradeSubjectsTableWrap.innerHTML = html;
+    gradeSubjects.forEach(function(s) { updateGradeSubjectRowDisplay(s.id); });
+  }
+
+  // Targeted update: only the range cell for one row. Inputs/selects are
+  // never rebuilt, so typing a subject name never loses focus/keyboard.
+  function updateGradeSubjectRowDisplay(id) {
+    var subj = gradeSubjects.filter(function(s) { return s.id === id; })[0];
+    var cell = document.getElementById("gs-range-cell-" + id);
+    if (!subj || !cell) return;
+    var row = sortedScale().filter(function(r) { return r.grade === subj.grade; })[0];
+    if (!row) { cell.innerHTML = '<span class="error-msg">Grade not in current scale</span>'; return; }
+    cell.textContent = formatRange(row);
+  }
+
+  gradeSubjectsTableWrap.addEventListener("input", function(e) {
+    var inp = e.target;
+    if (inp.getAttribute("data-field") !== "name") return;
+    var id = parseInt(inp.getAttribute("data-id"), 10);
+    var subj = gradeSubjects.filter(function(s) { return s.id === id; })[0];
+    if (!subj) return;
+    subj.name = inp.value;
+    saveToLocalStorage(STORE.gradeSubjects, gradeSubjects);
+    var label = document.getElementById("gs-name-label-" + id);
+    var selLabel = document.querySelector('label[for="gs-grade-' + id + '"]');
+    if (selLabel) selLabel.textContent = "Grade for " + (inp.value || "subject");
+  });
+
+  gradeSubjectsTableWrap.addEventListener("change", function(e) {
+    var sel = e.target;
+    if (sel.getAttribute("data-field") !== "grade") return;
+    var id = parseInt(sel.getAttribute("data-id"), 10);
+    var subj = gradeSubjects.filter(function(s) { return s.id === id; })[0];
+    if (!subj) return;
+    subj.grade = sel.value;
+    saveToLocalStorage(STORE.gradeSubjects, gradeSubjects);
+    updateGradeSubjectRowDisplay(id);
+    renderGradeResults();
+  });
+
+  gradeSubjectsTableWrap.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-remove]");
+    if (!btn) return;
+    gradeSubjects = gradeSubjects.filter(function(s) { return s.id !== parseInt(btn.getAttribute("data-remove"), 10); });
+    saveToLocalStorage(STORE.gradeSubjects, gradeSubjects);
+    renderGradeSubjectsTable();
+    renderGradeResults();
+  });
+
+  addGradeSubjectBtn.addEventListener("click", function() {
+    var firstGrade = sortedScale()[0];
+    gradeSubjects.push({ id: nextGradeSubjectId++, name: "New Subject", grade: firstGrade ? firstGrade.grade : "" });
+    saveToLocalStorage(STORE.gradeSubjects, gradeSubjects);
+    renderGradeSubjectsTable();
+    renderGradeResults();
+  });
+
+  resetGradeSubjectsBtn.addEventListener("click", function() {
+    if (!confirm("Reset the grade-based calculator? This clears all subjects.")) return;
+    gradeSubjects = []; nextGradeSubjectId = 1;
+    saveToLocalStorage(STORE.gradeSubjects, gradeSubjects);
+    renderGradeSubjectsTable();
+    renderGradeResults();
+  });
+
+  function renderGradeResults() {
+    if (!gradeSubjects.length) {
+      gradeSubjectsError.textContent = "";
+      gradeDistributionBox.innerHTML = '<p class="no-match">Add a subject to see the grade distribution.</p>';
+      gradeOverallBox.innerHTML = '<p class="no-match">Add a subject to see the combined result.</p>';
+      return;
+    }
+    var result = calculateGradeBasedResults(gradeSubjects);
+    gradeSubjectsError.textContent = result.invalidCount > 0
+      ? (result.invalidCount + " subject(s) use a grade that no longer exists in your grading scale. Update them to include them in the result.")
+      : "";
+
+    gradeDistributionBox.innerHTML = result.distribution.length
+      ? '<ul class="dist-list">' + result.distribution.map(function(d) {
+          return '<li class="dist-row"><span class="dist-grade">' + esc(d.grade) + '</span><span class="dist-count">' + d.count + ' subject' + (d.count === 1 ? "" : "s") + '</span></li>';
+        }).join("") + '</ul>'
+      : '<p class="no-match">No valid grades entered yet.</p>';
+
+    var overallHtml = "";
+    overallHtml += '<div class="result-block"><div class="result-block-label">Overall Grade</div>';
+    if (result.overallGrade) {
+      overallHtml += '<div class="result-block-value">' + esc(result.overallGrade.grade) + '</div>' +
+        '<div class="result-block-note">' + esc(result.overallGrade.desc) + '</div>' + statusPill(result.overallGrade.pass);
+    } else {
+      overallHtml += '<div class="result-block-note">Cannot be determined precisely — the entered grades span multiple grade bands, and this grading system has no defined rule for combining them.</div>';
+    }
+    overallHtml += '</div>';
+
+    overallHtml += '<div class="result-block"><div class="result-block-label">Possible Percentage Range</div>';
+    if (result.avgMin !== null) {
+      overallHtml += '<div class="result-block-value">' + result.avgMin.toFixed(1) + '% – ' + result.avgMax.toFixed(1) + '%</div>' +
+        '<div class="result-block-note">Based on averaging each subject\'s grade range, assuming equal weight per subject — not an exact percentage.</div>';
+    } else {
+      overallHtml += '<div class="result-block-note">Not available — no subject has a grade recognized by the current grading scale.</div>';
+    }
+    overallHtml += '</div>';
+
+    gradeOverallBox.innerHTML = overallHtml;
+  }
+
+  function renderAll() {
+    renderScaleTable();
+    renderScaleActions();
+    renderQuickResult();
+    renderSubjects();
+    renderGradeSubjectsTable();
+    renderGradeResults();
+    refreshSavedList();
+  }
+
+  loadFromUrlHash();
+  renderAll();
+})();
+</script>
+</body>
+</html>
